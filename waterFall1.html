@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>瀑布</title>
+    <style type="text/css">
+        .container {
+            position: relative;
+        }
+        .item {
+            position: absolute;
+            width: 210px;
+        }
+    </style>
+</head>
+<body>
+    <section class="container" id="container">
+        
+    </section>
+
+    <script type="text/javascript">
+        class WaterFall {
+            constructor() {
+                this.colNum = 5;
+                this.colWidth = 210;
+                this.containerWidth = 1050;
+                this.container = document.getElementById('container');
+                this.heightArr = [0, 0, 0, 0, 0];
+                this.baseUrl = 'http://cued.xunlei.com/demos/publ/img/';
+                this._imgIndex = '000';
+                this.initColImgs = 5;
+                this._scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            }
+
+            get imgIndex() {
+                return this._imgIndex;
+            }
+
+            set imgIndex(val) {
+                if (val < 10) {
+                    this._imgIndex = '00' + val;
+                }else if(val < 100) {
+                    this._imgIndex = '0' + val;
+                }else {
+                    this._imgIndex = val;
+                }
+            }
+
+            init() {
+                this.setContainerWidth().setColNum().create().scroll();
+                return this;
+            }
+
+            setContainerWidth(width) {
+                this.containerWidth = width || this.container.offsetWidth;
+                return this;
+            }
+
+            setColNum(num) {
+                this.colNum = num || Math.floor(this.containerWidth / this.colWidth);
+                this.heightArr = new Array(this.colNum).fill(0);
+                return this;
+            }
+
+            /*页面加载初始创建*/
+            create() {
+                for(let i = 0, len = this.initColImgs * this.colNum; i < len; i ++) {
+                    this.append();
+                }
+                return this;
+            }
+
+            append() {
+                if (this.imgIndex >= 160) {
+                    return this;
+                }
+                let minHeight = this.heightArr[0],
+                    appendIndex = 0;
+                this.heightArr.forEach((item, index) => {
+                    if(minHeight > item) {
+                        minHeight = item;
+                        appendIndex = index;
+                    }
+                })
+
+                let img = document.createElement('img');
+                img.src = `${this.baseUrl}P_${this.imgIndex}.jpg`;
+                this.imgIndex ++;
+                img.style.left = `${appendIndex * this.colWidth}px`;
+                img.style.top = `${minHeight}px`;
+                img.className = 'item';
+                this.container.appendChild(img);
+                this.heightArr[appendIndex] += img.offsetHeight;
+                console.log(this.heightArr[appendIndex], '   ', img.offsetHeight, img)
+                return this;
+            }
+
+            refresh() {
+                let elemContainer = document.createDocumentFragment();
+                for (let i = 0; i < this.colNum; i ++) {
+                    let item = document.createElement('div');
+                    item.className = 'item';
+                    elemContainer.appendChild(item);
+                }
+                this.itemContainer = elemContainer.children;
+                this.container.innerHTML = '';
+                this.container.appendChild(elemContainer);
+                return this;
+            }
+
+            scroll() {
+                let that = this;
+                window.onscroll = event => {
+                    /*滚动距离大于100才处理*/
+                    let scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                    if(Math.abs(scrollTop - that._scrollTop) > 100) {
+                        that._scrollTop = scrollTop;
+                        that.scrollDetect();
+                    }
+                }
+                return that;
+            }
+
+            scrollDetect() {
+                let visibHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight,
+                    that = this;
+                this.heightArr.forEach((item, index) => {
+                    if (item - this._scrollTop < visibHeight) {
+                        that.append();
+                    }
+                })
+            }
+        }
+        window.onload = () => {
+            let waterFall = new WaterFall();
+            waterFall.init();
+        }
+    </script>
+</body>
+</html>
